@@ -21,6 +21,7 @@ void *join_group(void *arg)
     printf("select 1 to join a group\n");
     printf("select 2 to send message to a group\n");
     printf("Enter the option: ");
+
     if(fgets(buffer,255,stdin))
     {
       if(sscanf(buffer,"%d", &option) != 1)
@@ -34,15 +35,13 @@ void *join_group(void *arg)
       continue;
     }
 
-
     switch(option)
     {
       case 1:
-enter_groupid:
+      enter_groupid:
         printf("Please enter the groupid \n");
         if(fgets(buffer,255,stdin))
         {
-          //setvbuf (stdin, NULL, _IONBF, BUFSIZ);
           if(sscanf(buffer,"%d", &option) == 1)
           {
             snprintf(buffer, 15,"join groupid %d", option);
@@ -134,6 +133,7 @@ int main(int argc, char *argv[])
   pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
   pthread_create(&thread_id, &attr, join_group, (void *)&sockfd); 
+  pthread_exit(NULL);
 
 
   return 0;
