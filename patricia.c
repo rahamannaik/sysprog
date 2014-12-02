@@ -37,7 +37,7 @@ Node * search(Node * t, DataType k )
 	return next; 
 }
 
-void insert( Node ** root_d_ptr, DataType k)
+int insert( Node ** root_d_ptr, DataType k)
 {
 	int  static node_count=9900;
 
@@ -57,7 +57,7 @@ void insert( Node ** root_d_ptr, DataType k)
 #ifdef DEBUG
 		printf("inserted root\n\n");
 #endif
-		return ;
+		return TRIE_INSERT_SUCCESS;
 	}
 
 	Node * current, * parent, * lastnode, * newnode;
@@ -67,7 +67,7 @@ void insert( Node ** root_d_ptr, DataType k)
 	if ( k == lastnode-> key ) 
 	{ 
 		printf("Duplicate %x\n", k); 
-		exit(1); 
+    return TRIE_DUPLICATE_KEY;
 	}
 #ifdef DEBUG
 		printf("last node : %#x, ", 
@@ -112,9 +112,10 @@ void insert( Node ** root_d_ptr, DataType k)
 #ifdef DEBUG
 	printf("inserted\n\n"); 
 #endif
+  return TRIE_INSERT_SUCCESS;
 }
 
-void delete( Node ** root_d_ptr, DataType k)
+int delete( Node ** root_d_ptr, DataType k)
 {
 
 	Node * parent, *current, *child, *header;
@@ -124,7 +125,7 @@ void delete( Node ** root_d_ptr, DataType k)
 
 	printf("Delete: %#x\n", (k&0xff000000)>>24);  
 
-	if ( !header ) return ;   // root is null
+	if ( !header ) return TRIE_DELETE_FAILED;   // root is null
 
 	parent  = header;
 
@@ -135,7 +136,7 @@ void delete( Node ** root_d_ptr, DataType k)
 		free(*root_d_ptr);
 		*root_d_ptr = NULL;
 	
-		return ;
+		return TRIE_DELETE_SUCCESS;
 	} 
 
 	while(1) {
@@ -159,11 +160,8 @@ printf("\n");
 		if ( child->key != k) 
 		{
 			printf("Not found\n"); 
-			return;
+			return TRIE_ELEM_NOT_FOUND;
 		}
-
-
-
 
 		DataType key_to_change = current->key;
 
@@ -215,6 +213,8 @@ printf("\n");
 		} 
 		break;
 	}
+
+  return TRIE_DELETE_SUCCESS;
 }
 
 

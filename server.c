@@ -1,7 +1,12 @@
 #include <stdio.h>
+#include <string.h>
 #include <sys/types.h> 
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <unistd.h>
+#include "patricia.h"
+
+#define MAX_GROUP_SIZE 1000
 
 typedef struct group_member
 {
@@ -9,14 +14,16 @@ typedef struct group_member
  int client_port;
  //char buffer[1000];
  struct group_member *next;
-};
-
-typedef struct group_member group_member_t;
+} group_member_t;
 
 group_member_t *insert_group_list(int groupid, struct sockaddr_in *client_addr);
+void doprocessing (int sock, struct sockaddr_in *client_addr);
+int insert_to_patricia(Node *header_of_patricia, int sock_fd);
 
 group_member_t *head = NULL;
 group_member_t *group[1000] = {NULL};
+
+Node *group_client_map[MAX_GROUP_SIZE];
 
 group_member_t *insert_group_list(int groupid, struct sockaddr_in *client_addr)
 {
@@ -53,7 +60,7 @@ int main( int argc, char *argv[] )
     char buffer[256];
     struct sockaddr_in serv_addr, cli_addr;
     int  n;
-    unsigned long pid, pid1;
+    int pid, pid1;
 
     /* First call to socket() function */
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -105,7 +112,7 @@ int main( int argc, char *argv[] )
      while (1) 
      {
         newsockfd = accept(sockfd, 
-                (struct sockaddr *) &cli_addr, &clilen);
+                (struct sockaddr *) &cli_addr, (unsigned int *) &clilen);
         if (newsockfd < 0)
         {
             perror("ERROR on accept");
@@ -159,10 +166,12 @@ void doprocessing (int sock, struct sockaddr_in *client_addr)
        
        if(!groupid)
        {
-        printf("groupid is zero. Server exiting...\n");
+        printf("groupid can't be zero. Server exiting...\n");
+        /* TODO :: Instead of exiting here, it would be better if we could just ignore this message. */
         exit(0);
        }
-       grpmember = insert_group_list(groupid, client_addr);     
+       grpmember = insert_group_list(groupid, client_addr);
+       insert_to_patricia(group_client_map[groupid], sock);
        
        bzero(buffer,256);
        
@@ -236,6 +245,12 @@ void doprocessing (int sock, struct sockaddr_in *client_addr)
         perror("ERROR writing to socket");
         exit(1);
     }*/
+}
+
+int insert_to_patricia(Node *header_of_patricia, int sock_fd)
+{
+  int status = insert(&header_of_patricia, (DataType)sock_fd);
+  return status;
 }
 
 /*void timer_handler(void)

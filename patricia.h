@@ -23,5 +23,26 @@ struct node {
 	int node_count;
 };
 
+typedef enum trie_codes {
+  TRIE_INSERT_SUCCESS = 0,
+  TRIE_INSERT_FAILED,
+  TRIE_LOOKUP_SUCCESS,
+  TRIE_LOOKUP_FAILED,
+  TRIE_DELETE_SUCCESS,
+  TRIE_DELETE_FAILED,
+  TRIE_ELEM_NOT_FOUND,
+  TRIE_DUPLICATE_KEY
+} trie_codes_t;
+
+int insert( Node ** root_d_ptr, DataType k);
+Node * search(Node * t, DataType k );
+int different_bits_pos  ( DataType DX,  DataType DY);
+int delete( Node ** root_d_ptr, DataType k);
+void display_search_result(Node * t, DataType k );
+void depth_first_traversal_core_and_search( Node * t, DataType k,  int level);
+void  depth_first_traversal_and_search(Node * t , DataType k);
+void depth_first_traversal_core( Node * t, int level);
+void  depth_first_traversal(Node * t );
+
 
 #endif 
