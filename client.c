@@ -10,6 +10,9 @@ int main(int argc, char *argv[])
     int sockfd, portno, n;
     struct sockaddr_in serv_addr;
     struct hostent *server;
+    pthread_t thread_id;
+    pthread_attr_t attr;
+
 
     char buffer[256];
 
@@ -32,7 +35,9 @@ int main(int argc, char *argv[])
     }
 
     bzero((char *) &serv_addr, sizeof(serv_addr));
+
     serv_addr.sin_family = AF_INET;
+
     bcopy((char *)server->h_addr, 
            (char *)&serv_addr.sin_addr.s_addr,
                 server->h_length);
@@ -44,6 +49,12 @@ int main(int argc, char *argv[])
          perror("ERROR connecting");
          exit(1);
     }	
+
+    pthread_attr_init(&attr);
+    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+
+    pthread_create(&thread_id, &attr, join_group, NULL); 
+
     /* Now ask for a message from the user, this message
     * will be read by server
     */
@@ -152,7 +163,6 @@ int main(int argc, char *argv[])
       bzero(buffer,256);
     }
    
-
     return 0;
 }
 
