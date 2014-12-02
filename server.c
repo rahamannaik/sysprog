@@ -1,20 +1,4 @@
-#include <stdio.h>
-#include <string.h>
-#include <sys/types.h> 
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <unistd.h>
-#include "patricia.h"
-
-#define MAX_GROUP_SIZE 1000
-
-typedef struct group_member
-{
- struct sockaddr_in client_addr;
- int client_port;
- //char buffer[1000];
- struct group_member *next;
-} group_member_t;
+#include "server.h"
 
 group_member_t *insert_group_list(int groupid, struct sockaddr_in *client_addr);
 void doprocessing (int sock, struct sockaddr_in *client_addr);
@@ -22,8 +6,6 @@ int insert_to_patricia(Node *header_of_patricia, int sock_fd);
 
 group_member_t *head = NULL;
 group_member_t *group[1000] = {NULL};
-
-Node *group_client_map[MAX_GROUP_SIZE];
 
 group_member_t *insert_group_list(int groupid, struct sockaddr_in *client_addr)
 {
@@ -56,17 +38,23 @@ return grpmember;
 }
 int main( int argc, char *argv[] )
 {
+    char *ident = "Server : ";
     int sockfd, newsockfd, portno, clilen;
     char buffer[256];
     struct sockaddr_in serv_addr, cli_addr;
     int  n;
     int pid, pid1;
 
+    /* Opening the syslog. */
+    openlog(ident, logopt, facility);
+
     /* First call to socket() function */
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) 
     {
         perror("ERROR opening socket");
+        syslog(priority, "Coudln't open the socket, exiting.");
+        closelog();
         exit(1);
     }
     /* Initialize socket structure */
@@ -81,6 +69,8 @@ int main( int argc, char *argv[] )
                           sizeof(serv_addr)) < 0)
     {
          perror("ERROR on binding");
+         syslog(priority, "Coudln't bind the socket, exiting.");
+         closelog();
          exit(1);
     }
     /* Now start listening for the clients, here 
@@ -116,14 +106,16 @@ int main( int argc, char *argv[] )
         if (newsockfd < 0)
         {
             perror("ERROR on accept");
-            exit(1);
+            syslog(priority, "Coudln't accept new connection, exiting.");
+            closelog();
+            continue;
         }
         /* Create child process */
         pid = fork();
         if (pid < 0)
         {
             perror("ERROR on fork");
-	    exit(1);
+	          exit(1);
         }
         if (pid == 0)  
         {
