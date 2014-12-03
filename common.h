@@ -12,6 +12,7 @@
 
 typedef unsigned char u_char;
 typedef unsigned short int u_short;
+typedef unsigned int u_int;
 
 typedef enum message_type {
   JOIN_GROUP = 0,
@@ -28,7 +29,7 @@ typedef struct message
   u_char task_id;
   u_short group_id;
   u_short data_len;
-  u_char data[0]; 
+  u_char data[]; 
 }message;
 
 

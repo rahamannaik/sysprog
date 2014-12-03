@@ -1,4 +1,26 @@
-#include "client.h"
+#include "common.h"
+
+int sendall(int s, char *buf, int *len)
+{
+  int total = 0;        // how many bytes we've sent
+  int bytesleft = *len; // how many we have left to send
+  int n;
+
+  while(total < *len) 
+  {
+    n = send(s, buf+total, bytesleft, 0);
+    if (n == -1)
+    { 
+      break; 
+    }
+    total += n;
+    bytesleft -= n;
+  }
+
+  *len = total; // return number actually sent here
+
+  return n == -1 ? -1 : 0; // return -1 on failure, 0 on success
+} 
 
 void *join_group(void *arg)
 {
@@ -6,13 +28,14 @@ void *join_group(void *arg)
 
   int n;
   char buffer[256];
+  message *ptr;
   bzero(buffer,256);
 
   while(1)
   {
     unsigned int option;
     printf("select 1 to join a group\n");
-    printf("select 2 to send message to a group\n");
+    printf("select 2 to send message to a group(Max 255 character long)\n");
     printf("Enter the option: ");
 
     if(fgets(buffer,255,stdin))
@@ -37,7 +60,13 @@ void *join_group(void *arg)
         {
           if(sscanf(buffer,"%d", &option) == 1)
           {
-            snprintf(buffer, 15,"join groupid %d", option);
+            ptr = malloc(sizeof(message) + 2); 
+            ptr->msg_type = JOIN_GROUP;
+            ptr->data_len = htons(2);
+            *ptr->data = htons(option);
+
+            printf("size of message = %d\n", sizeof(message));
+            printf("size of *ptr = %d\n", sizeof(*ptr));
           }
           else
           {
@@ -59,8 +88,7 @@ void *join_group(void *arg)
         continue;
     }
 
-    n = write(sockfd,buffer,strlen(buffer));
-    if (n < 0) 
+    if(sendall(sockfd, ptr, (sizeof(*ptr) + 2)) == -1)
     {
       perror("ERROR writing to socket");
       exit(1);
