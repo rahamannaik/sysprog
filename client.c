@@ -85,12 +85,17 @@ void *join_group(void *arg)
 
 }
 
+void *task_from_server(void *arg)
+{
+  int sockfd = *((int *)arg); 
+}
+
 int main(int argc, char *argv[])
 {
   int sockfd, portno, n;
   struct sockaddr_in serv_addr;
   struct hostent *server;
-  pthread_t thread_id;
+  pthread_t thread_id1, thread_id2;
   pthread_attr_t attr;
 
 
@@ -132,7 +137,8 @@ int main(int argc, char *argv[])
   pthread_attr_init(&attr);
   pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
-  pthread_create(&thread_id, &attr, join_group, (void *)&sockfd); 
+  pthread_create(&thread_id1, &attr, join_group, (void *)&sockfd); 
+  pthread_create(&thread_id2, &attr, task_from_server, (void *)&sockfd); 
   pthread_exit(NULL);
 
 
