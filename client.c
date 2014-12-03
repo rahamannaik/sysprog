@@ -29,6 +29,7 @@ void *join_group(void *arg)
   int n;
   char buffer[256];
   message *ptr;
+  int len;
   bzero(buffer,256);
 
   while(1)
@@ -64,9 +65,7 @@ void *join_group(void *arg)
             ptr->msg_type = JOIN_GROUP;
             ptr->data_len = htons(2);
             *ptr->data = htons(option);
-
-            printf("size of message = %d\n", sizeof(message));
-            printf("size of *ptr = %d\n", sizeof(*ptr));
+            len = sizeof(message) + 2;
           }
           else
           {
@@ -88,7 +87,7 @@ void *join_group(void *arg)
         continue;
     }
 
-    if(sendall(sockfd, ptr, (sizeof(*ptr) + 2)) == -1)
+    if(sendall(sockfd, (char *)ptr, &len) == -1)
     {
       perror("ERROR writing to socket");
       exit(1);
