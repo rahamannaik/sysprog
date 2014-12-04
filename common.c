@@ -20,7 +20,7 @@ int sendall(int s, char *buf, int len)
   return n == -1 ? -1 : 0; // return -1 on failure, 0 on success           
 }                                                                          
 
-int readall(int s, char *buf, int len)                                     
+int recvall(int s, char *buf, int len)                                     
 {                                                                          
   int total = 0;        // how many bytes we've received                   
   int bytesleft = len; // how many we have left to received                
@@ -28,7 +28,7 @@ int readall(int s, char *buf, int len)
 
   while(total < len)                                                       
   {                                                                        
-    n = read(s, buf+total, bytesleft);                                     
+    n = recv(s, buf+total, bytesleft, 0);                                     
     if (n == -1)                                                           
     {                                                                      
       break;                                                               

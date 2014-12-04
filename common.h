@@ -39,6 +39,6 @@ typedef struct message
 }message;
 
 int sendall(int s, char *buf, int len);
-int readall(int s, char *buf, int len);
+int recvall(int s, char *buf, int len);
 
 #endif

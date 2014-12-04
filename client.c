@@ -86,7 +86,7 @@ int find_max_number(int sockfd)
 {
   u_short data_len;
 
-  if(readall(sockfd, (char *)&data_len, sizeof(data_len)) < 0)
+  if(recvall(sockfd, (char *)&data_len, sizeof(data_len)) < 0)
   {
     perror("ERROR reading from socket");
     exit(1);
@@ -99,7 +99,7 @@ int find_max_number(int sockfd)
   for(int i = 0; i < data_len / sizeof(int); i++)
   {
 
-    if(readall(sockfd, (char *)&data, sizeof(data)) < 0)
+    if(recvall(sockfd, (char *)&data, sizeof(data)) < 0)
     {
       perror("ERROR reading from socket");
       exit(1);
@@ -118,13 +118,13 @@ void *task_from_server(void *arg)
   u_char task_id;
   u_short group_id;
 
-  if(readall(sockfd, &task_id, sizeof(task_id)) < 0)
+  if(recvall(sockfd, &task_id, sizeof(task_id)) < 0)
   {
     perror("ERROR reading from socket");
     exit(1);
   }
 
-  if(readall(sockfd, (char *)&group_id, sizeof(group_id)) < 0)
+  if(recvall(sockfd, (char *)&group_id, sizeof(group_id)) < 0)
   {
     perror("ERROR reading from socket");
     exit(1);
@@ -190,7 +190,7 @@ int main(int argc, char *argv[])
   pthread_create(&thread_id1, &attr, join_group, (void *)&sockfd); 
 
   u_char msg_type;
-  n = readall(sockfd, &msg_type, sizeof(msg_type));
+  n = recvall(sockfd, &msg_type, sizeof(msg_type));
   if (n < 0) 
   {
     perror("ERROR reading from socket");
