@@ -17,6 +17,7 @@ typedef unsigned int u_int;
 typedef enum message_type {
   JOIN_GROUP = 0,
   LEAVE_GROUP,
+  BROADCAST_MSG,
   START_OF_TASK,
   TASK_DATA,
   END_OF_TASK,

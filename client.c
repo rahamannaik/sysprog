@@ -18,7 +18,6 @@ int sendall(int s, char *buf, int *len)
   }
 
   *len = total; // return number actually sent here
-
   return n == -1 ? -1 : 0; // return -1 on failure, 0 on success
 } 
 
@@ -29,7 +28,7 @@ void *join_group(void *arg)
   int n;
   char buffer[256];
   message *ptr;
-  int len;
+  int data_len, msg_len;
   bzero(buffer,256);
 
   while(1)
@@ -65,7 +64,7 @@ void *join_group(void *arg)
             ptr->msg_type = JOIN_GROUP;
             ptr->data_len = htons(2);
             *ptr->data = htons(option);
-            len = sizeof(message) + 2;
+            msg_len = sizeof(message) + 2;
           }
           else
           {
@@ -80,6 +79,13 @@ void *join_group(void *arg)
       case 2:
         printf("Please enter the message: ");
         fgets(buffer,255,stdin);
+        data_len = strlen(buffer);
+        msg_len = sizeof(message) + data_len;
+        ptr = malloc(sizeof(msg_len)); 
+        ptr->msg_type = BROADCAST_MSG;
+        ptr->data_len = htons(data_len);
+        memcpy(ptr->data, buffer, data_len);
+
         break;
 
       default:
@@ -87,11 +93,13 @@ void *join_group(void *arg)
         continue;
     }
 
-    if(sendall(sockfd, (char *)ptr, &len) == -1)
+    if(sendall(sockfd, (char *)ptr, &msg_len) == -1)
     {
       perror("ERROR writing to socket");
       exit(1);
     }
+    free(ptr);
+
     bzero(buffer,256);
     n = read(sockfd,buffer,255);
     if (n < 0) 
