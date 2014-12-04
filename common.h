@@ -39,21 +39,4 @@ typedef struct message
 }message;
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #endif

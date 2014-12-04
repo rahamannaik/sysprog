@@ -1,12 +1,12 @@
 #include "common.h"
 
-int sendall(int s, char *buf, int *len)
+int sendall(int s, char *buf, int len)
 {
   int total = 0;        // how many bytes we've sent
-  int bytesleft = *len; // how many we have left to send
+  int bytesleft = len; // how many we have left to send
   int n;
 
-  while(total < *len) 
+  while(total < len) 
   {
     n = send(s, buf+total, bytesleft, 0);
     if (n == -1)
@@ -17,9 +17,29 @@ int sendall(int s, char *buf, int *len)
     bytesleft -= n;
   }
 
-  *len = total; // return number actually sent here
   return n == -1 ? -1 : 0; // return -1 on failure, 0 on success
 } 
+
+int readall(int s, char *buf, int len)
+{
+  int total = 0;        // how many bytes we've received
+  int bytesleft = len; // how many we have left to received
+  int n;
+
+  while(total < len) 
+  {
+    n = read(s, buf+total, bytesleft);
+    if (n == -1)
+    { 
+      break; 
+    }
+    total += n;
+    bytesleft -= n;
+  }
+
+  return n == -1 ? -1 : 0; // return -1 on failure, 0 on success
+  
+}
 
 void *join_group(void *arg)
 {
@@ -93,7 +113,7 @@ void *join_group(void *arg)
         continue;
     }
 
-    if(sendall(sockfd, (char *)ptr, &msg_len) == -1)
+    if(sendall(sockfd, (char *)ptr, msg_len) == -1)
     {
       perror("ERROR writing to socket");
       exit(1);
@@ -107,7 +127,7 @@ int find_max_number(int sockfd)
 {
   u_short data_len;
 
-  if(read(sockfd, &data_len, sizeof(data_len)) < 0)
+  if(readall(sockfd, (char *)&data_len, sizeof(data_len)) < 0)
   {
     perror("ERROR reading from socket");
     exit(1);
@@ -120,7 +140,7 @@ int find_max_number(int sockfd)
   for(int i = 0; i < data_len / sizeof(int); i++)
   {
 
-    if(read(sockfd, &data, sizeof(data)) < 0)
+    if(readall(sockfd, (char *)&data, sizeof(data)) < 0)
     {
       perror("ERROR reading from socket");
       exit(1);
@@ -131,6 +151,7 @@ int find_max_number(int sockfd)
   }
   return max;
 }
+
 void *task_from_server(void *arg)
 {
   int sockfd = *((int *)arg); 
