@@ -8,7 +8,12 @@
 #include <netdb.h>
 #include <string.h>
 #include <stdlib.h>
+#include <limits.h>
+#include <unistd.h>
 #include <pthread.h>
+
+/* task ID = 1  finding the max value from given list of numbers
+ */  
 
 typedef unsigned char u_char;
 typedef unsigned short int u_short;

@@ -29,7 +29,7 @@ void *join_group(void *arg)
   char buffer[256];
   message *ptr;
   int data_len, msg_len;
-  bzero(buffer,256);
+  memset(buffer,0,256);
 
   while(1)
   {
@@ -99,23 +99,65 @@ void *join_group(void *arg)
       exit(1);
     }
     free(ptr);
-
-    bzero(buffer,256);
-    n = read(sockfd,buffer,255);
-    if (n < 0) 
-    {
-      perror("ERROR reading from socket");
-      exit(1);
-    }
-    printf("%s\n",buffer);
-    bzero(buffer,256);
   }
 
 }
 
+int find_max_number(int sockfd)
+{
+  u_short data_len;
+
+  if(read(sockfd, &data_len, sizeof(data_len)) < 0)
+  {
+    perror("ERROR reading from socket");
+    exit(1);
+  }
+  data_len = ntohs(data_len);
+
+  int data;
+  int max = INT_MIN;
+
+  for(int i = 0; i < data_len / sizeof(int); i++)
+  {
+
+    if(read(sockfd, &data, sizeof(data)) < 0)
+    {
+      perror("ERROR reading from socket");
+      exit(1);
+    }
+    data = ntohl(data);
+
+    max = (max < data) ? data : max;
+  }
+  return max;
+}
 void *task_from_server(void *arg)
 {
   int sockfd = *((int *)arg); 
+
+  u_char task_id;
+  u_short group_id;
+
+  if(read(sockfd, &task_id, sizeof(task_id)) < 0)
+  {
+    perror("ERROR reading from socket");
+    exit(1);
+  }
+
+  if(read(sockfd, &group_id, sizeof(group_id)) < 0)
+  {
+    perror("ERROR reading from socket");
+    exit(1);
+  }
+
+  group_id = ntohs(group_id);
+
+  if(task_id == 1)  // finding max element from given set of numbers.
+  {
+    int max = find_max_number(sockfd);
+
+  }
+
 }
 
 int main(int argc, char *argv[])
@@ -146,7 +188,7 @@ int main(int argc, char *argv[])
     exit(0);
   }
 
-  bzero((char *) &serv_addr, sizeof(serv_addr));
+  memset((char *) &serv_addr, 0, sizeof(serv_addr));
 
   serv_addr.sin_family = AF_INET;
 
@@ -166,7 +208,20 @@ int main(int argc, char *argv[])
   pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
   pthread_create(&thread_id1, &attr, join_group, (void *)&sockfd); 
-  pthread_create(&thread_id2, &attr, task_from_server, (void *)&sockfd); 
+
+  u_char msg_type;
+  n = read(sockfd, &msg_type, 8);
+  if (n < 0) 
+  {
+    perror("ERROR reading from socket");
+    exit(1);
+  }
+
+  if(START_OF_TASK == msg_type)
+  {
+    pthread_create(&thread_id2, &attr, task_from_server, (void *)&sockfd); 
+
+  }
   pthread_exit(NULL);
 
 
