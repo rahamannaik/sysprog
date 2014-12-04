@@ -159,13 +159,13 @@ void *task_from_server(void *arg)
   u_char task_id;
   u_short group_id;
 
-  if(read(sockfd, &task_id, sizeof(task_id)) < 0)
+  if(readall(sockfd, &task_id, sizeof(task_id)) < 0)
   {
     perror("ERROR reading from socket");
     exit(1);
   }
 
-  if(read(sockfd, &group_id, sizeof(group_id)) < 0)
+  if(readall(sockfd, (char *)&group_id, sizeof(group_id)) < 0)
   {
     perror("ERROR reading from socket");
     exit(1);
@@ -179,7 +179,6 @@ void *task_from_server(void *arg)
 
   }
 
-  return 0;
 }
 
 int main(int argc, char *argv[])
@@ -232,7 +231,7 @@ int main(int argc, char *argv[])
   pthread_create(&thread_id1, &attr, join_group, (void *)&sockfd); 
 
   u_char msg_type;
-  n = read(sockfd, &msg_type, 8);
+  n = readall(sockfd, &msg_type, sizeof(msg_type));
   if (n < 0) 
   {
     perror("ERROR reading from socket");
