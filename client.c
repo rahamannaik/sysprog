@@ -119,10 +119,14 @@ void *task_from_server(void *arg)
   u_short group_id;
 
 <<<<<<< HEAD
+<<<<<<< HEAD
   if(recvall(sockfd, &task_id, sizeof(task_id)) < 0)
 =======
   if(readall(sockfd, (char *)&task_id, sizeof(task_id)) < 0)
 >>>>>>> 0a3586a85b3aff855dfdbda34f85c01c5b0122d6
+=======
+  if(readall(sockfd, &task_id, sizeof(task_id)) < 0)
+>>>>>>> parent of 0a3586a... Fixed Build Error and warning in client
   {
     perror("ERROR reading from socket");
     exit(1);
@@ -195,10 +199,14 @@ int main(int argc, char *argv[])
 
   u_char msg_type;
 <<<<<<< HEAD
+<<<<<<< HEAD
   n = recvall(sockfd, &msg_type, sizeof(msg_type));
 =======
   n = readall(sockfd, (char *)&msg_type, sizeof(msg_type));
 >>>>>>> 0a3586a85b3aff855dfdbda34f85c01c5b0122d6
+=======
+  n = readall(sockfd, &msg_type, sizeof(msg_type));
+>>>>>>> parent of 0a3586a... Fixed Build Error and warning in client
   if (n < 0) 
   {
     perror("ERROR reading from socket");

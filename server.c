@@ -381,7 +381,7 @@ server_error_codes_e read_and_send_data (int sock_fd, int size_per_client, int f
       return STATUS_CANT_SEEK;
     }
 
-    //write(newfd, buff, 1000);
+    write(newfd, buff, 1000);
 
     /* send (sock_fd, msg_struct, sizeof(msg_struct), 0); */
     max_size -= n;
