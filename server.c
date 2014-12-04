@@ -242,6 +242,7 @@ void doprocessing (int sock, struct sockaddr_in *client_addr)
 int insert_to_patricia(Node *header_of_patricia, int sock_fd)
 {
   int status = insert(&header_of_patricia, (DataType)sock_fd);
+  depth_first_traversal_and_send_data(header_of_patricia, 200, 0/* , pointer to mesg_struct pre-filled with task id, group id */);
   return status;
 }
 
@@ -267,3 +268,126 @@ void display_msgs_per_group()
   }
  }
 }*/
+
+server_error_codes_e depth_first_traversal_and_send_data(Node * t, int size_per_client, int filefd /* , pointer to mesg_struct pre-filled with task id, group id */)
+{
+	if ( !t) return STATUS_NO_CLI_IN_GRP;   // root is null
+
+	Node * current, *next;
+  server_error_codes_e status;
+  off_t offset = 0;
+
+  filefd = open ("./Random_Numbers.txt", O_RDONLY); 
+
+	current = t;
+
+	next     = t-> leftchild;
+
+	if (  next-> bitpos > t->bitpos) 
+	{
+		printf("0)Left Branch:bit %d %d\n", 
+				next-> bitpos, next->node_count); 
+	}
+	else
+	{
+		printf("0)Left:Data %#x %d\n",  
+				(next->key&0xff000000u)>>24, 
+				next->node_count); 
+	}
+	printf("\n"); 
+
+  status = read_and_send_data(next->key, size_per_client, filefd, &offset /* , pointer to mesg_struct pre-filled with task id, group id */);
+  if (status != STATUS_SUCCESS) {
+    return status;
+  }
+
+	depth_first_traversal_core_and_send_data(next, 1, size_per_client, filefd, &offset /* , pointer to mesg_struct pre-filled with task id, group id */);
+
+	return STATUS_SUCCESS;
+}
+
+server_error_codes_e depth_first_traversal_core_and_send_data( Node * t, int level, int size_per_client, int filefd, off_t *offset /* , pointer to mesg_struct pre-filled with task id, group id */)
+{
+	Node * left, * right;
+  server_error_codes_e status;
+
+	left = t -> leftchild;
+	right = t -> rightchild;
+
+  if ( left ) {
+    if (  left-> bitpos > t->bitpos) 
+    {
+      printf("%*s",  level*2," ");
+      printf("%d)Left Branch:bit %d %d\n",level ,
+          left-> bitpos, left->node_count); 
+      printf("\n"); 
+      depth_first_traversal_core_and_send_data(left, level+1, size_per_client, filefd, offset /* , pointer to mesg_struct pre-filled with task id, group id */);
+    }
+    else
+    {
+      printf("%*s",  level*2," ");
+      printf("%d)Left:Data %#x %d\n", level, 
+          (left->key&0xff000000u)>>24, 
+          left->node_count); 
+      status = read_and_send_data(left->key, size_per_client, filefd, offset /* , pointer to mesg_struct pre-filled with task id, group id */);
+      if (status != STATUS_SUCCESS) {
+        return status;
+      }
+    }
+  }
+	printf("\n"); 
+  if ( right ) {
+    if (  right-> bitpos >t->bitpos) 
+    {
+      printf("%*s",  level*2," ");
+      printf("%d)Right Branch:bit %d %d\n",level, 
+          right-> bitpos ,right->node_count); 
+      printf("\n"); 
+      depth_first_traversal_core_and_send_data(right, level+1, size_per_client, filefd, offset /* , pointer to mesg_struct pre-filled with task id, group id */);
+    }
+    else
+    {
+      printf("%*s",  level*2," ");
+      printf("%d)Right:Data %#x %d\n",level, 
+          (right->key&0xff000000)>>24, 
+          right->node_count); 
+      status = read_and_send_data(right->key, size_per_client, filefd, offset /* , pointer to mesg_struct pre-filled with task id, group id */);
+      if (status != STATUS_SUCCESS) {
+        return status;
+      }
+    }
+  }
+  return STATUS_SUCCESS;
+}
+
+server_error_codes_e read_and_send_data (int sock_fd, int size_per_client, int filefd, off_t *offset /* , pointer to mesg_struct pre-filled with task id, group id */ )
+{
+  int n = 0;
+  char buff[1000];
+  int max_size = size_per_client;
+
+  while (max_size >= 0) {
+    n = pread (filefd, buff, 100 /* This size should be based on the array size of the message struct. */, *offset);
+    if (n == -1) {
+      return STATUS_FILE_READ_ERR;
+    } else if (n == 0) {
+      /* Update the Message type here. */
+      break; /* This break has to be at different place after updating the message type */
+    }
+
+    /* Have to handle the space case */
+
+    if((*offset = lseek(filefd, n ,SEEK_SET) < 0)) {
+      return STATUS_CANT_SEEK;
+    }
+
+    write(newfd, buff, 1000);
+
+    /* send (sock_fd, msg_struct, sizeof(msg_struct), 0); */
+    max_size -= n;
+  }
+
+  /* Close the file if end of file is reached. */
+
+  return STATUS_SUCCESS;
+}
