@@ -38,5 +38,7 @@ typedef struct message
   u_char data[]; 
 }message;
 
+int sendall(int s, char *buf, int len);
+int readall(int s, char *buf, int len);
 
 #endif
