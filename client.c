@@ -108,7 +108,7 @@ u_int find_max_number(int sockfd)
     }
     data = ntohl(data);
 
-    printf("\n%u", data);
+  //  printf("\n%u", data);
 
     max = (max < data) ? data : max;
   }
