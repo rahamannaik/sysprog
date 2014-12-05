@@ -24,6 +24,7 @@ typedef enum message_type {
   LEAVE_GROUP,
   BROADCAST_MSG,
   START_OF_TASK,
+  REPLY_FROM_CLIENT,
   TASK_DATA,
   END_OF_TASK,
   ERR_MSG //(Could be used to inform any error message to the clients in the group) 
