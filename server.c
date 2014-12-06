@@ -242,7 +242,7 @@ void doprocessing (int sock, struct sockaddr_in *client_addr)
 int insert_to_patricia(Node *header_of_patricia, int sock_fd)
 {
   int status = insert(&header_of_patricia, (DataType)sock_fd);
-  depth_first_traversal_and_send_data(header_of_patricia, 200, 0/* , pointer to mesg_struct pre-filled with task id, group id */);
+  depth_first_traversal_and_send_data(header_of_patricia, 200, 0, 1 /* , pointer to mesg_struct pre-filled with task id, group id */);
   return status;
 }
 
@@ -269,7 +269,7 @@ void display_msgs_per_group()
  }
 }*/
 
-server_error_codes_e depth_first_traversal_and_send_data(Node * t, int size_per_client, int filefd /* , pointer to mesg_struct pre-filled with task id, group id */)
+server_error_codes_e depth_first_traversal_and_send_data(Node * t, int size_per_client, int filefd, unsigned char is_int /* , pointer to mesg_struct pre-filled with task id, group id */)
 {
 	if ( !t) return STATUS_NO_CLI_IN_GRP;   // root is null
 
@@ -293,7 +293,7 @@ server_error_codes_e depth_first_traversal_and_send_data(Node * t, int size_per_
 		printf("0)Left:Data %#x %d\n",  
 				(next->key&0xff000000u)>>24, 
 				next->node_count); 
-    status = read_and_send_data(next->key, size_per_client, filefd, &offset /* , pointer to mesg_struct pre-filled with task id, group id */);
+    status = read_and_send_data(next->key, size_per_client, filefd, &offset, is_int /* , pointer to mesg_struct pre-filled with task id, group id */);
     if (status != STATUS_SUCCESS) {
       return status;
     }
@@ -301,12 +301,12 @@ server_error_codes_e depth_first_traversal_and_send_data(Node * t, int size_per_
 	printf("\n"); 
 
 
-	depth_first_traversal_core_and_send_data(next, 1, size_per_client, filefd, &offset /* , pointer to mesg_struct pre-filled with task id, group id */);
+	depth_first_traversal_core_and_send_data(next, 1, size_per_client, filefd, &offset, is_int /* , pointer to mesg_struct pre-filled with task id, group id */);
 
 	return STATUS_SUCCESS;
 }
 
-server_error_codes_e depth_first_traversal_core_and_send_data( Node * t, int level, int size_per_client, int filefd, off_t *offset /* , pointer to mesg_struct pre-filled with task id, group id */)
+server_error_codes_e depth_first_traversal_core_and_send_data( Node * t, int level, int size_per_client, int filefd, off_t *offset, unsigned char is_int /* , pointer to mesg_struct pre-filled with task id, group id */)
 {
 	Node * left, * right;
   server_error_codes_e status;
@@ -321,7 +321,7 @@ server_error_codes_e depth_first_traversal_core_and_send_data( Node * t, int lev
       printf("%d)Left Branch:bit %d %d\n",level ,
           left-> bitpos, left->node_count); 
       printf("\n"); 
-      depth_first_traversal_core_and_send_data(left, level+1, size_per_client, filefd, offset /* , pointer to mesg_struct pre-filled with task id, group id */);
+      depth_first_traversal_core_and_send_data(left, level+1, size_per_client, filefd, offset, is_int /* , pointer to mesg_struct pre-filled with task id, group id */);
     }
     else
     {
@@ -329,7 +329,7 @@ server_error_codes_e depth_first_traversal_core_and_send_data( Node * t, int lev
       printf("%d)Left:Data %#x %d\n", level, 
           (left->key&0xff000000u)>>24, 
           left->node_count); 
-      status = read_and_send_data(left->key, size_per_client, filefd, offset /* , pointer to mesg_struct pre-filled with task id, group id */);
+      status = read_and_send_data(left->key, size_per_client, filefd, offset, is_int /* , pointer to mesg_struct pre-filled with task id, group id */);
       if (status != STATUS_SUCCESS) {
         return status;
       }
@@ -343,7 +343,7 @@ server_error_codes_e depth_first_traversal_core_and_send_data( Node * t, int lev
       printf("%d)Right Branch:bit %d %d\n",level, 
           right-> bitpos ,right->node_count); 
       printf("\n"); 
-      depth_first_traversal_core_and_send_data(right, level+1, size_per_client, filefd, offset /* , pointer to mesg_struct pre-filled with task id, group id */);
+      depth_first_traversal_core_and_send_data(right, level+1, size_per_client, filefd, offset, is_int /* , pointer to mesg_struct pre-filled with task id, group id */);
     }
     else
     {
@@ -351,7 +351,7 @@ server_error_codes_e depth_first_traversal_core_and_send_data( Node * t, int lev
       printf("%d)Right:Data %#x %d\n",level, 
           (right->key&0xff000000)>>24, 
           right->node_count); 
-      status = read_and_send_data(right->key, size_per_client, filefd, offset /* , pointer to mesg_struct pre-filled with task id, group id */);
+      status = read_and_send_data(right->key, size_per_client, filefd, offset, is_int /* , pointer to mesg_struct pre-filled with task id, group id */);
       if (status != STATUS_SUCCESS) {
         return status;
       }
@@ -360,10 +360,12 @@ server_error_codes_e depth_first_traversal_core_and_send_data( Node * t, int lev
   return STATUS_SUCCESS;
 }
 
-server_error_codes_e read_and_send_data (int sock_fd, int size_per_client, int filefd, off_t *offset /* , pointer to mesg_struct pre-filled with task id, group id */ )
+server_error_codes_e read_and_send_data (int sock_fd, int size_per_client, int filefd, off_t *offset, unsigned char is_int /* , pointer to mesg_struct pre-filled with task id, group id */ )
 {
   int n = 0;
   char buff[1000];
+  char c = '\0';
+  int still_to_read = 0;
   int max_size = size_per_client;
 
   while (max_size >= 0) {
@@ -375,9 +377,32 @@ server_error_codes_e read_and_send_data (int sock_fd, int size_per_client, int f
       break; /* This break has to be at different place after updating the message type */
     }
 
+    if (is_int) {
+      if(buff[n] != ' ') {
+        FILE* fp = fdopen(filefd, "r");
+        if((*offset = lseek(filefd, n, (SEEK_SET))) < 0) {
+          return STATUS_CANT_SEEK;
+        }
+
+        if (fseek(fp, n, (SEEK_SET)) < 0) {
+          return STATUS_CANT_SEEK;
+        }
+
+        while (c != EOF) {
+          fread(&c, 1, 1, fp);
+          if (c == ' ') {
+            still_to_read++;
+            break;
+          }
+        }
+        if(pread(filefd, &buff[n], still_to_read, *offset) != still_to_read)  return STATUS_FILE_READ_ERR;
+      }
+    }
+    buff[n+ still_to_read] = '\0';
+
     /* Have to handle the space case */
 
-    if((*offset = lseek(filefd, n ,SEEK_SET) < 0)) {
+    if((*offset = lseek(filefd, (n + still_to_read) ,SEEK_SET) < 0)) {
       return STATUS_CANT_SEEK;
     }
 

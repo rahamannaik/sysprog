@@ -40,8 +40,8 @@ typedef enum server_error_codes
   STATUS_CANT_SEEK
 } server_error_codes_e;
 
-server_error_codes_e depth_first_traversal_and_send_data(Node * t, int size_per_client, int filefd /* , pointer to mesg_struct pre-filled with task id, group id */);
-server_error_codes_e depth_first_traversal_core_and_send_data( Node * t, int level, int size_per_client, int filefd, off_t *offset /* , pointer to mesg_struct pre-filled with task id, group id */);
-server_error_codes_e read_and_send_data (int sock_fd, int size_per_client, int filefd, off_t *offset /* , pointer to mesg_struct pre-filled with task id, group id */ );
+server_error_codes_e depth_first_traversal_and_send_data(Node * t, int size_per_client, int filefd, unsigned char is_int  /* , pointer to mesg_struct pre-filled with task id, group id */);
+server_error_codes_e depth_first_traversal_core_and_send_data( Node * t, int level, int size_per_client, int filefd, off_t *offset, unsigned char is_int /* , pointer to mesg_struct pre-filled with task id, group id */);
+server_error_codes_e read_and_send_data (int sock_fd, int size_per_client, int filefd, off_t *offset, unsigned char is_int /* , pointer to mesg_struct pre-filled with task id, group id */ );
 
 #endif
