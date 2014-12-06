@@ -377,6 +377,9 @@ server_error_codes_e read_and_send_data (int sock_fd, int size_per_client, int f
       break; /* This break has to be at different place after updating the message type */
     }
 
+    /* TODO :: Kiran move this if block, after this while loop if you are NOT reading 
+     * the entire size in one go. 
+     */
     if (is_int) {
       if(buff[n] != ' ') {
         FILE* fp = fdopen(filefd, "r");
@@ -395,7 +398,13 @@ server_error_codes_e read_and_send_data (int sock_fd, int size_per_client, int f
             break;
           }
         }
-        if(pread(filefd, &buff[n], still_to_read, *offset) != still_to_read)  return STATUS_FILE_READ_ERR;
+        /* TODO :: Kiran : Before reading... increase the size of the buffer, I would suggest
+         * Have a temp buff and copy the exising thing in the temp buff and free the allocated
+         * memory and then freshly allocate a memory n + still_to_read. */
+
+        if(pread(filefd, &buff[n], still_to_read, *offset) != still_to_read) {
+          return STATUS_FILE_READ_ERR;
+        }
       }
     }
     buff[n+ still_to_read] = '\0';
