@@ -42,7 +42,7 @@ void *join_group(void *arg)
             ptr = malloc(sizeof(message) + 2); 
             ptr->msg_type = JOIN_GROUP;
             ptr->data_len = htons(2);
-            *ptr->data = htons(option);
+            *(ptr->data) = htons(option);
             msg_len = sizeof(message) + 2;
           }
           else
@@ -82,7 +82,7 @@ void *join_group(void *arg)
 
 }
 
-int find_max_number(int sockfd)
+u_int find_max_number(int sockfd)
 {
   u_short data_len;
 
@@ -93,10 +93,12 @@ int find_max_number(int sockfd)
   }
   data_len = ntohs(data_len);
 
-  int data;
-  int max = INT_MIN;
+  printf("\n Data len = %d", data_len);
 
-  for(int i = 0; i < data_len / sizeof(int); i++)
+  u_int data;
+  u_int max = 0;
+
+  for(int i = 0; i < data_len / sizeof(u_int); i++)
   {
 
     if(recvall(sockfd, (char *)&data, sizeof(data)) < 0)
@@ -106,6 +108,8 @@ int find_max_number(int sockfd)
     }
     data = ntohl(data);
 
+  //  printf("\n%u", data);
+
     max = (max < data) ? data : max;
   }
   return max;
@@ -114,6 +118,9 @@ int find_max_number(int sockfd)
 void *task_from_server(void *arg)
 {
   int sockfd = *((int *)arg); 
+  u_int max;
+  u_short data_len;
+  u_int msg_len;
 
   u_char task_id;
   u_short group_id;
@@ -134,9 +141,32 @@ void *task_from_server(void *arg)
 
   if(task_id == 1)  // finding max element from given set of numbers.
   {
-    int max = find_max_number(sockfd);
-
+    max = find_max_number(sockfd);
+    data_len = sizeof(max);
+    msg_len = sizeof(message) + data_len;
   }
+
+  u_int max1 = htonl(max);
+  
+  message *ptr = malloc(msg_len);
+  ptr->msg_type = REPLY_FROM_CLIENT;
+  ptr->task_id = task_id;
+  ptr->group_id = htons(group_id);
+  ptr->data_len = htons(data_len);
+  memcpy((u_int *)ptr->data, &max1, sizeof(u_int));
+
+  if(sendall(sockfd, (char *)ptr, msg_len) == -1)
+  {
+    perror("ERROR writing to socket");
+    exit(1);
+  }
+
+  printf("\nMax value = %u\n", max);
+
+  free(ptr);
+
+  pthread_exit(NULL);
+
 
 }
 

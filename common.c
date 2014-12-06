@@ -28,7 +28,7 @@ int recvall(int s, char *buf, int len)
 
   while(total < len)                                                       
   {                                                                        
-    n = recv(s, buf+total, bytesleft, 0);                                     
+    n = recv(s, buf+total, bytesleft, MSG_WAITALL);                                     
     if (n == -1)                                                           
     {                                                                      
       break;                                                               
