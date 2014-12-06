@@ -293,13 +293,13 @@ server_error_codes_e depth_first_traversal_and_send_data(Node * t, int size_per_
 		printf("0)Left:Data %#x %d\n",  
 				(next->key&0xff000000u)>>24, 
 				next->node_count); 
+    status = read_and_send_data(next->key, size_per_client, filefd, &offset /* , pointer to mesg_struct pre-filled with task id, group id */);
+    if (status != STATUS_SUCCESS) {
+      return status;
+    }
 	}
 	printf("\n"); 
 
-  status = read_and_send_data(next->key, size_per_client, filefd, &offset /* , pointer to mesg_struct pre-filled with task id, group id */);
-  if (status != STATUS_SUCCESS) {
-    return status;
-  }
 
 	depth_first_traversal_core_and_send_data(next, 1, size_per_client, filefd, &offset /* , pointer to mesg_struct pre-filled with task id, group id */);
 
@@ -380,8 +380,6 @@ server_error_codes_e read_and_send_data (int sock_fd, int size_per_client, int f
     if((*offset = lseek(filefd, n ,SEEK_SET) < 0)) {
       return STATUS_CANT_SEEK;
     }
-
-    write(newfd, buff, 1000);
 
     /* send (sock_fd, msg_struct, sizeof(msg_struct), 0); */
     max_size -= n;
