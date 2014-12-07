@@ -1,4 +1,4 @@
-#!/bin/perl
+#!/usr/bin/perl
 
 if (@ARGV < 1) 
 {

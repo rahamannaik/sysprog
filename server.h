@@ -47,6 +47,7 @@ typedef enum server_error_codes
 server_error_codes_e depth_first_traversal_and_send_data(Node * t, int size_per_client, int filefd, off_t *offset, u_short taskid, u_short groupid);
 server_error_codes_e depth_first_traversal_core_and_send_data( Node * t, int level, int size_per_client, int filefd, off_t *offset, u_short taskid, u_short groupid);
 server_error_codes_e read_and_send_data (int sock_fd, int size_per_client, int filefd, off_t *offset, u_short taskid, u_short groupid );
+server_error_codes_e basic_read_and_send_data (unsigned int sock_fd, int size_per_client, int filefd, off_t *offset, u_short task_id, u_short group_id);
 
 void *handle_data(void *dummy);
 
