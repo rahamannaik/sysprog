@@ -568,8 +568,8 @@ server_error_codes_e depth_first_traversal_and_send_data(Node * t, int size_per_
 
     
     
-    status = read_and_send_data(next->key, size_per_client, filefd, offset, /* , pointer to mesg_struct pre-filled with task id, group id */taskid, groupid);
-    //status = basic_read_and_send_data(next->key, size_per_client, filefd, offset /* , pointer to mesg_struct pre-filled with task id, group id */, taskid, groupid);
+//    status = read_and_send_data(next->key, size_per_client, filefd, offset, /* , pointer to mesg_struct pre-filled with task id, group id */taskid, groupid);
+    status = basic_read_and_send_data(next->key, size_per_client, filefd, offset /* , pointer to mesg_struct pre-filled with task id, group id */, taskid, groupid);
     if (status != STATUS_SUCCESS) {
       return status;
     }
@@ -602,8 +602,8 @@ server_error_codes_e depth_first_traversal_core_and_send_data( Node * t, int lev
       printf("%d)Left:Data %#x %d\n", level,
           (left->key),
           left->node_count);
-      status = read_and_send_data(left->key, size_per_client, filefd, offset, /* , pointer to mesg_struct pre-filled with task id, group id */taskid, groupid);
-      //status = basic_read_and_send_data(left->key, size_per_client, filefd, offset /* , pointer to mesg_struct pre-filled with task id, group id */, taskid, groupid);
+     // status = read_and_send_data(left->key, size_per_client, filefd, offset, /* , pointer to mesg_struct pre-filled with task id, group id */taskid, groupid);
+      status = basic_read_and_send_data(left->key, size_per_client, filefd, offset /* , pointer to mesg_struct pre-filled with task id, group id */, taskid, groupid);
       if (status != STATUS_SUCCESS) {
         return status;
       }
@@ -626,8 +626,8 @@ server_error_codes_e depth_first_traversal_core_and_send_data( Node * t, int lev
       printf("%d)Right:Data %#x %d\n",level,
           (right->key),
           right->node_count);
-      status = read_and_send_data(right->key, size_per_client, filefd, offset,  /* , pointer to mesg_struct pre-filled with task id, group id */ taskid, groupid);
-      //status = basic_read_and_send_data(right->key, size_per_client, filefd, offset /* , pointer to mesg_struct pre-filled with task id, group id */, taskid, groupid);
+     // status = read_and_send_data(right->key, size_per_client, filefd, offset,  /* , pointer to mesg_struct pre-filled with task id, group id */ taskid, groupid);
+      status = basic_read_and_send_data(right->key, size_per_client, filefd, offset /* , pointer to mesg_struct pre-filled with task id, group id */, taskid, groupid);
       if (status != STATUS_SUCCESS) {
         return status;
       }

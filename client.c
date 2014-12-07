@@ -111,6 +111,18 @@ u_int find_max_number(int sockfd)
   u_int data;
   u_int max = 0;
 
+  u_char *data_ptr = malloc(data_len);
+
+
+    if(recvall(sockfd, data_ptr, sizeof(data_len)) < 0)
+    {
+      perror("ERROR reading from socket");
+      exit(1);
+    }
+
+    printf("%s", data_ptr);
+
+  /*
   for(int i = 0; i < data_len / sizeof(u_int); i++)
   {
 
@@ -123,6 +135,7 @@ u_int find_max_number(int sockfd)
 
     max = (max < data) ? data : max;
   }
+  */
   return max;
 }
 
