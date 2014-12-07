@@ -40,6 +40,13 @@ void *join_group(void *arg)
           if(sscanf(buffer,"%d", &option) == 1)
           {
             ptr = malloc(sizeof(message) + 2); 
+
+            if(ptr == NULL)
+            {
+              perror("Error: not able to allocate memory");
+              exit(1);
+            }
+
             ptr->msg_type = JOIN_GROUP;
             ptr->data_len = htons(2);
             *(ptr->data) = htons(option);
@@ -61,6 +68,12 @@ void *join_group(void *arg)
         data_len = strlen(buffer);
         msg_len = sizeof(message) + data_len;
         ptr = malloc(sizeof(msg_len)); 
+
+        if(ptr == NULL)
+        {
+          perror("Error: not able to allocate memory");
+          exit(1);
+        }
         ptr->msg_type = BROADCAST_MSG;
         ptr->data_len = htons(data_len);
         memcpy(ptr->data, buffer, data_len);
@@ -93,8 +106,6 @@ u_int find_max_number(int sockfd)
   }
   data_len = ntohs(data_len);
 
-  printf("\n Data len = %d", data_len);
-
   u_int data;
   u_int max = 0;
 
@@ -108,16 +119,13 @@ u_int find_max_number(int sockfd)
     }
     data = ntohl(data);
 
-  //  printf("\n%u", data);
-
     max = (max < data) ? data : max;
   }
   return max;
 }
 
-void *task_from_server(void *arg)
+void task_from_server(int sockfd)
 {
-  int sockfd = *((int *)arg); 
   u_int max;
   u_short data_len;
   u_int msg_len;
@@ -149,6 +157,12 @@ void *task_from_server(void *arg)
   u_int max1 = htonl(max);
   
   message *ptr = malloc(msg_len);
+
+  if(ptr == NULL)
+  {
+    perror("Error: not able to allocate memory");
+    exit(1);
+  }
   ptr->msg_type = REPLY_FROM_CLIENT;
   ptr->task_id = task_id;
   ptr->group_id = htons(group_id);
@@ -161,13 +175,9 @@ void *task_from_server(void *arg)
     exit(1);
   }
 
-  printf("\nMax value = %u\n", max);
-
   free(ptr);
 
-  pthread_exit(NULL);
-
-
+  return;
 }
 
 int main(int argc, char *argv[])
@@ -219,21 +229,23 @@ int main(int argc, char *argv[])
 
   pthread_create(&thread_id1, &attr, join_group, (void *)&sockfd); 
 
-  u_char msg_type;
-  n = recvall(sockfd, &msg_type, sizeof(msg_type));
-  if (n < 0) 
+  while(1)
   {
-    perror("ERROR reading from socket");
-    exit(1);
-  }
+    u_char msg_type;
+    n = recvall(sockfd, &msg_type, sizeof(msg_type));
+    if (n < 0) 
+    {
+      perror("ERROR reading from socket");
+      exit(1);
+    }
 
-  if(START_OF_TASK == msg_type)
-  {
-    pthread_create(&thread_id2, &attr, task_from_server, (void *)&sockfd); 
+    if(START_OF_TASK == msg_type)
+    {
+      task_from_server(sockfd); 
+    }
 
   }
   pthread_exit(NULL);
-
 
   return 0;
 }
