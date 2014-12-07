@@ -7,7 +7,7 @@ int sendall(int s, char *buf, int len)
   int n;                                                                   
 
 
-  printf("%s:%d, Socket fd : %d\n", __func__, __LINE__, s);
+//  printf("%s:%d, Socket fd : %d\n", __func__, __LINE__, s);
   while(total < len)                                                       
   {                                                                        
     n = send(s, buf+total, bytesleft, 0);                                  
@@ -38,7 +38,7 @@ int recvall(int s, char *buf, int len)
     total += n;                                                            
     bytesleft -= n;                                                        
   }
-  buf[total] = '\0';
+//  buf[total] = '\0';
 
   return n == -1 ? -1 : 0; // return -1 on failure, 0 on success           
 

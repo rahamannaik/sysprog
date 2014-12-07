@@ -60,14 +60,11 @@ int main()
 
       close(socketHandle);
 
-      u_int count = 0;
 
       while(1)
       {
-        count++;
 
         printf("sending data to client to find the max of given list of numbers\n");
-        printf("%d\n", count);
 
         FILE *myFile;
         myFile = fopen("Random_Numbers.txt", "r");
@@ -155,13 +152,13 @@ int main()
 
         fclose(myFile);
 
-      /*  printf("want to send more numbers?\n");
+        printf("want to send more numbers?\n");
         char option;
         scanf("%c", &option);
         if(option == 'y')
           continue;
         else
-          break; */
+          break; 
       }
 
       close(sockConnection);

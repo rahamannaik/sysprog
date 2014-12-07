@@ -4,7 +4,7 @@ void *join_group(void *arg)
 {
   int sockfd = ((int)arg);
 
-  printf("sock fd in thead is = %d\n", sockfd);
+  //printf("sock fd in thead is = %d\n", sockfd);
 
   int n;
   char buffer[256];
@@ -114,15 +114,15 @@ u_int find_max_number(int sockfd)
   u_char *data_ptr = malloc(data_len);
 
 
-    if(recvall(sockfd, data_ptr, sizeof(data_len)) < 0)
+/*    if(recvall(sockfd, data_ptr, sizeof(data_len)) < 0)
     {
       perror("ERROR reading from socket");
       exit(1);
-    }
+    } */
 
-    printf("%s", data_ptr);
+ //   printf("%s\n", data_ptr);
 
-  /*
+  
   for(int i = 0; i < data_len / sizeof(u_int); i++)
   {
 
@@ -135,15 +135,55 @@ u_int find_max_number(int sockfd)
 
     max = (max < data) ? data : max;
   }
-  */
+  
   return max;
 }
+
+
+u_int word_count(int sockfd)
+{
+  u_short data_len;
+
+  if(recvall(sockfd, (char *)&data_len, sizeof(data_len)) < 0)
+  {
+    perror("ERROR reading from socket");
+    exit(1);
+  }
+
+  data_len = ntohs(data_len);
+
+
+  u_char *data_ptr = malloc(data_len);
+
+
+/*  if(recvall(sockfd, data_ptr, sizeof(data_len)) < 0)
+  {
+    perror("ERROR reading from socket");
+    exit(1);
+  }
+*/
+  u_int count = 0;
+
+  for(int i = 0; i < data_len; i++)
+  {
+    if(data_ptr[i] == ' ')
+    {
+      count++;
+    }
+  }
+
+  count = htonl(count);
+  return count;
+}
+
 
 void task_from_server(int sockfd)
 {
   u_int max;
+  u_int count_words;
   u_short data_len;
   u_int msg_len;
+  message *ptr;
 
   u_char task_id;
   u_short group_id;
@@ -163,27 +203,37 @@ void task_from_server(int sockfd)
 
   group_id = ntohs(group_id);
 
-  if(task_id == 1)  // finding max element from given set of numbers.
-  {
-    max = find_max_number(sockfd);
-    data_len = sizeof(max);
-    msg_len = sizeof(message) + data_len;
-  }
-
-  u_int max1 = htonl(max);
-  
-  message *ptr = malloc(msg_len);
 
   if(ptr == NULL)
   {
     perror("Error: not able to allocate memory");
     exit(1);
   }
+
+  if(task_id == 1)  // finding max element from given set of numbers.
+  {
+    max = find_max_number(sockfd);
+    data_len = sizeof(max);
+    msg_len = sizeof(message) + data_len;
+    u_int max1 = htonl(max);
+    ptr = malloc(msg_len);
+    memcpy((u_int *)ptr->data, &max1, sizeof(u_int));
+  }
+
+  if(task_id == 2) // couting the words in file chunk
+  {
+    count_words = word_count(sockfd);
+    data_len = sizeof(count_words);
+    msg_len = sizeof(message) + data_len;
+    count_words = htonl(count_words);
+    ptr = malloc(msg_len);
+    memcpy((u_int *)ptr->data, &count_words, sizeof(u_int));
+  }
+
   ptr->msg_type = REPLY_FROM_CLIENT;
   ptr->task_id = task_id;
   ptr->group_id = htons(group_id);
   ptr->data_len = htons(data_len);
-  memcpy((u_int *)ptr->data, &max1, sizeof(u_int));
 
   if(sendall(sockfd, (char *)ptr, msg_len) == -1)
   {
@@ -240,7 +290,7 @@ int main(int argc, char *argv[])
     exit(1);
   }	
 
-  printf("socked fd = %d\n", sockfd);
+  //printf("socked fd = %d\n", sockfd);
 
   pthread_attr_init(&attr);
   pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
