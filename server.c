@@ -642,10 +642,14 @@ server_error_codes_e basic_read_and_send_data (unsigned int sock_fd, int size_pe
   message *ptr = malloc(msg_len);
 
   ptr->msg_type = START_OF_TASK;
-  ptr->task_id = htons(task_id);
+  ptr->task_id = task_id;
   ptr->group_id = htons(group_id);
+  ptr->data_len = htons(msg_len);
 
-  printf("%s:%d, Size Per Client :%d:\n", __func__, __LINE__, size_per_client);
+  printf("%s:%d, Size Per Client :%d\n", __func__, __LINE__, size_per_client);
+  printf("%s:%d, Task Id :%d\n", __func__, __LINE__, ptr->task_id);
+  printf("%s:%d, htons'd Group Id :%d, Actual Group Id :%d\n", __func__, __LINE__, ptr->group_id, group_id);
+  printf("%s:%d, htons'd Data Len :%d, Actual Data Len :%ld\n", __func__, __LINE__, ptr->data_len, msg_len);
   //while(fread(ptr->data, 1, size_per_client, file));
   read(filefd, ptr->data, size_per_client);
   //printf("Data That I am gonna send : %s\n", ptr->data);
@@ -681,8 +685,13 @@ server_error_codes_e read_and_send_data (int sock_fd, int size_per_client, int f
   } else {
     ptr->msg_type = TASK_DATA;
   }
-  ptr->task_id = htons(task_id);
+  ptr->task_id = task_id;
   ptr->group_id = htons(group_id);
+
+  printf("%s:%d, Size Per Client :%d\n", __func__, __LINE__, size_per_client);
+  printf("%s:%d, Task Id :%d\n", __func__, __LINE__, ptr->task_id);
+  printf("%s:%d, htons'd Group Id :%d, Actual Group Id :%d\n", __func__, __LINE__, ptr->group_id, group_id);
+  printf("%s:%d, Message Type :%d\n", __func__, __LINE__, ptr->msg_type);
 
   while (max_size >= 0) {
     n = pread (filefd, ptr->data, size_per_client, *offset);
@@ -740,6 +749,8 @@ server_error_codes_e read_and_send_data (int sock_fd, int size_per_client, int f
       return STATUS_CANT_SEEK;
     }
 
+    ptr->data_len = htons(msg_len + still_to_read);
+    printf("%s:%d, htons'd Data Len :%d, Actual Data Len :%ld\n", __func__, __LINE__, ptr->data_len, (msg_len + still_to_read));
     /* send (sock_fd, msg_struct, sizeof(msg_struct), 0); */
     if(sendall(sock_fd, (char *)ptr, (msg_len + still_to_read)) == -1)
     {
