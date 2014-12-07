@@ -118,7 +118,7 @@ u_int find_max_number(int sockfd)
       exit(1);
     }
     data = ntohl(data);
-    printf("Data That I received from Server : %s\n", data);
+    //printf("Data That I received from Server : %s\n", data);
 
     max = (max < data) ? data : max;
   }

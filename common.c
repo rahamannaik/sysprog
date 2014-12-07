@@ -6,6 +6,8 @@ int sendall(int s, char *buf, int len)
   int bytesleft = len; // how many we have left to send                    
   int n;                                                                   
 
+
+  printf("%s:%d, Socket fd : %d\n", __func__, __LINE__, s);
   while(total < len)                                                       
   {                                                                        
     n = send(s, buf+total, bytesleft, 0);                                  
