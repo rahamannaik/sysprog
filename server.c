@@ -208,7 +208,7 @@ int main(int argc, char *argv[])
 
           {
 
-            printf("Server-accept() is OK...\n");
+            printf("%s:%d, Server-accept() is OK... New sock fd :%d\n", __func__, __LINE__, newfd);
 
 
 
@@ -563,21 +563,18 @@ server_error_codes_e depth_first_traversal_and_send_data(Node * t, int size_per_
   else
   {
     printf("0)Left:Data %#x %d\n",
-        (next->key&0xff000000u)>>24,
+        (next->key),
         next->node_count);
 
     
     
     status = read_and_send_data(next->key, size_per_client, filefd, offset, /* , pointer to mesg_struct pre-filled with task id, group id */taskid, groupid);
+    //status = basic_read_and_send_data(next->key, size_per_client, filefd, offset /* , pointer to mesg_struct pre-filled with task id, group id */, taskid, groupid);
     if (status != STATUS_SUCCESS) {
       return status;
     }
   }
   printf("\n");
-  //status = basic_read_and_send_data(next->key, size_per_client, filefd, &offset /* , pointer to mesg_struct pre-filled with task id, group id */, taskid, groupid);
-  //if (status != STATUS_SUCCESS) {
-  //  return status;
- // } 
   //depth_first_traversal_core_and_send_data(next, 1, size_per_client, filefd, &offset /* , pointer to mesg_struct pre-filled with task id, group id */, taskid, groupid);
 	depth_first_traversal_core_and_send_data(next, 1, size_per_client, filefd, offset, taskid, groupid/* , pointer to mesg_struct pre-filled with task id, group id */);
   return STATUS_SUCCESS;
@@ -603,7 +600,7 @@ server_error_codes_e depth_first_traversal_core_and_send_data( Node * t, int lev
     {
       printf("%*s", level*2," ");
       printf("%d)Left:Data %#x %d\n", level,
-          (left->key&0xff000000u)>>24,
+          (left->key),
           left->node_count);
       status = read_and_send_data(left->key, size_per_client, filefd, offset, /* , pointer to mesg_struct pre-filled with task id, group id */taskid, groupid);
       //status = basic_read_and_send_data(left->key, size_per_client, filefd, offset /* , pointer to mesg_struct pre-filled with task id, group id */, taskid, groupid);
@@ -627,7 +624,7 @@ server_error_codes_e depth_first_traversal_core_and_send_data( Node * t, int lev
     {
       printf("%*s", level*2," ");
       printf("%d)Right:Data %#x %d\n",level,
-          (right->key&0xff000000)>>24,
+          (right->key),
           right->node_count);
       status = read_and_send_data(right->key, size_per_client, filefd, offset,  /* , pointer to mesg_struct pre-filled with task id, group id */ taskid, groupid);
       //status = basic_read_and_send_data(right->key, size_per_client, filefd, offset /* , pointer to mesg_struct pre-filled with task id, group id */, taskid, groupid);
@@ -648,9 +645,10 @@ server_error_codes_e basic_read_and_send_data (unsigned int sock_fd, int size_pe
   ptr->task_id = htons(task_id);
   ptr->group_id = htons(group_id);
 
-  printf("In basic_read\n");
+  printf("%s:%d, Size Per Client :%d:\n", __func__, __LINE__, size_per_client);
   //while(fread(ptr->data, 1, size_per_client, file));
   read(filefd, ptr->data, size_per_client);
+  //printf("Data That I am gonna send : %s\n", ptr->data);
   //fread(ptr->data, 1, size_per_client, (FILE *)filefd);
 
   *offset = lseek(filefd, size_per_client, SEEK_SET);

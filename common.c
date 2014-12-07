@@ -35,7 +35,8 @@ int recvall(int s, char *buf, int len)
     }                                                                      
     total += n;                                                            
     bytesleft -= n;                                                        
-  }                                                                        
+  }
+  buf[total] = '\0';
 
   return n == -1 ? -1 : 0; // return -1 on failure, 0 on success           
 

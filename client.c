@@ -118,6 +118,7 @@ u_int find_max_number(int sockfd)
       exit(1);
     }
     data = ntohl(data);
+    printf("Data That I received from Server : %s\n", data);
 
     max = (max < data) ? data : max;
   }
@@ -130,7 +131,7 @@ void task_from_server(int sockfd)
   u_short data_len;
   u_int msg_len;
 
-  u_char task_id;
+  char task_id;
   u_short group_id;
 
   if(recvall(sockfd, &task_id, sizeof(task_id)) < 0)
@@ -231,7 +232,7 @@ int main(int argc, char *argv[])
 
   while(1)
   {
-    u_char msg_type;
+    char msg_type;
     n = recvall(sockfd, &msg_type, sizeof(msg_type));
     if (n < 0) 
     {
