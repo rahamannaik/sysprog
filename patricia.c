@@ -39,7 +39,7 @@ Node * search(Node * t, DataType k )
 
 int insert( Node ** root_d_ptr, DataType k)
 {
-	int  static node_count=9900;
+	int  static node_count = 0;
 
 #ifdef DEBUG
 	printf("Insert %#x, ", (k&0xff000000)>>24 );
