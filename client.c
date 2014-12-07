@@ -2,7 +2,9 @@
 
 void *join_group(void *arg)
 {
-  int sockfd = *((int *)arg);
+  int sockfd = ((int)arg);
+
+  printf("sock fd in thead is = %d\n", sockfd);
 
   int n;
   char buffer[256];
@@ -118,7 +120,6 @@ u_int find_max_number(int sockfd)
       exit(1);
     }
     data = ntohl(data);
-    printf("Data That I received from Server : %s\n", data);
 
     max = (max < data) ? data : max;
   }
@@ -131,8 +132,9 @@ void task_from_server(int sockfd)
   u_short data_len;
   u_int msg_len;
 
-  char task_id;
+  u_char task_id;
   u_short group_id;
+
 
   if(recvall(sockfd, &task_id, sizeof(task_id)) < 0)
   {
@@ -225,18 +227,22 @@ int main(int argc, char *argv[])
     exit(1);
   }	
 
+  printf("socked fd = %d\n", sockfd);
+
   pthread_attr_init(&attr);
   pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
-  pthread_create(&thread_id1, &attr, join_group, (void *)&sockfd); 
+  pthread_create(&thread_id1, &attr, join_group, (void *)sockfd); 
 
   while(1)
   {
-    char msg_type;
+  //  printf("message received form server\n");
+
+    u_char msg_type;
     n = recvall(sockfd, &msg_type, sizeof(msg_type));
     if (n < 0) 
     {
-      perror("ERROR reading from socket");
+      printf("ERROR reading from socket.....................");
       exit(1);
     }
 
