@@ -39,7 +39,7 @@ void *join_group(void *arg)
         {
           if(sscanf(buffer,"%d", &option) == 1)
           {
-            ptr = malloc(sizeof(message) + 2); 
+            ptr = malloc(sizeof(message)); 
 
             if(ptr == NULL)
             {
@@ -48,9 +48,9 @@ void *join_group(void *arg)
             }
 
             ptr->msg_type = JOIN_GROUP;
-            ptr->data_len = htons(2);
-            *(ptr->data) = htons(option);
-            msg_len = sizeof(message) + 2;
+            msg_len = sizeof(message);
+            u_short g_id = (u_short)option;
+            ptr->group_id = htons(g_id);
           }
           else
           {
