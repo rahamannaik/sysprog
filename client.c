@@ -62,7 +62,6 @@ void *join_group(void *arg)
             }
 
             msg_len = sizeof(message);
-            u_short g_id = (u_short)g_id;
             ptr->group_id = htons(g_id);
           }
           else
@@ -171,7 +170,14 @@ u_int word_count(int sockfd)
   u_char *data_ptr = malloc(data_len);
 
   u_int count = 0;
+  if(recvall(sockfd, (char *)data_ptr, data_len) < 0)
+  {
+    perror("ERROR reading from socket");
+    printf("%s:%d, Can't read from Socket : %d\n", __func__, __LINE__, sockfd);
+    exit(1);
+  }
 
+  printf ("%s:%d, data_ptr = %s\n", __func__, __LINE__, data_ptr);
   for(int i = 0; i < data_len; i++)
   {
     if(data_ptr[i] == ' ')
@@ -180,6 +186,7 @@ u_int word_count(int sockfd)
     }
   }
 
+  printf("%s:%d, Word Count : %d\b\n", __func__, __LINE__, count);
   count = htonl(count);
   return count;
 }
@@ -223,6 +230,7 @@ void task_from_server(int sockfd)
     exit(1);
   }
 
+  printf("%s:%d, Task ID : %d\n", __func__, __LINE__, task_id);
   if(task_id == 1)  // finding max element from given set of numbers.
   {
     max = find_max_number(sockfd);
@@ -248,7 +256,7 @@ void task_from_server(int sockfd)
   ptr->group_id = htons(group_id);
   ptr->data_len = htons(data_len);
 
-  if(sendall(sockfd, (char *)ptr, msg_len) == -1)
+  if(sendall(sockfd, (char *)ptr, (msg_len + sizeof(message))) == -1)
   {
     perror("ERROR writing to socket");
     exit(1);
