@@ -70,9 +70,9 @@ int main(int argc, char *argv[])
 
   {
 
-    perror("Server-socket() error lol!");
+    perror("Server-socket() error !");
 
-    /*just exit lol!*/
+    /*just exit !*/
 
     exit(1);
 
@@ -86,7 +86,7 @@ int main(int argc, char *argv[])
 
   {
 
-    perror("Server-setsockopt() error lol!");
+    perror("Server-setsockopt() error !");
 
     exit(1);
 
@@ -112,7 +112,7 @@ int main(int argc, char *argv[])
 
   {
 
-    perror("Server-bind() error lol!");
+    perror("Server-bind() error !");
 
     exit(1);
 
@@ -128,7 +128,7 @@ int main(int argc, char *argv[])
 
   {
 
-    perror("Server-listen() error lol!");
+    perror("Server-listen() error !");
 
     exit(1);
 
@@ -167,7 +167,7 @@ int main(int argc, char *argv[])
 
     {
 
-      perror("Server-select() error lol!");
+      perror("Server-select() error !");
 
       exit(1);
 
@@ -200,7 +200,7 @@ int main(int argc, char *argv[])
 
           {
 
-            perror("Server-accept() error lol!");
+            perror("Server-accept() error !");
 
           }
 
@@ -231,7 +231,7 @@ int main(int argc, char *argv[])
 
               {
 
-              perror("Server-select() error lol!");
+              perror("Server-select() error !");
 
               exit(1);
 
@@ -267,7 +267,7 @@ int main(int argc, char *argv[])
 
             else
 
-              perror("recv() error lol!");
+              perror("recv() error !");
 
             //delete_patricia(groupinfo[group_id-1].root, i);
 
@@ -304,6 +304,8 @@ int main(int argc, char *argv[])
               exit(1);
             }
             group_id = ntohs(group_id);
+            printf("%s:%d, groud id : %d\n", __func__, __LINE__, group_id);
+            printf("%s:%d, Message Type : %d\n", __func__, __LINE__, msg_type);
 
             if(JOIN_GROUP == msg_type)
             {
@@ -325,7 +327,6 @@ int main(int argc, char *argv[])
                   pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
                   pthread_create(&thread_id1, &attr, handle_user_input, NULL);
-                  pthread_exit(NULL);
                 }
               }
               else
@@ -342,6 +343,7 @@ int main(int argc, char *argv[])
             }
             else if(REPLY_FROM_CLIENT == msg_type)
             {
+              printf("%s:%d, Received Reply from Client : %d\n", __func__, __LINE__, i);
               u_short data_len;
               if(recvall(i, (char *)&data_len, sizeof(data_len)) < 0)
               {
@@ -428,6 +430,7 @@ int main(int argc, char *argv[])
     }
 
   }
+  pthread_exit(NULL);
   return 0;
 }
 
