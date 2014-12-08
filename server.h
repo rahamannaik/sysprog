@@ -12,7 +12,8 @@
 #include <fcntl.h>
 #include "patricia.h"
 #include <sys/stat.h>
-
+#include <signal.h>
+#include <unistd.h>
 
 #define MAX_GROUP_SIZE 1000
 #define TRUE 1

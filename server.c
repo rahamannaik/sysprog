@@ -62,7 +62,20 @@ int main(int argc, char *argv[])
 
   FD_ZERO(&read_fds);
 
+  struct sigaction sigact;
 
+  sigact.sa_handler = &handler_display_result;
+
+  sigact.sa_flags = SA_RESTART;
+
+  /* Block every signal during the handler */
+  sigfillset(&sigact.sa_mask);
+
+  /* Intercept SIGALRM */
+
+  if(sigaction(SIGALRM, &sigact, NULL) == -1) {
+    perror("Error: cannot handle SIGALRM");
+  }
 
   /* get the listener */
 
@@ -536,6 +549,7 @@ void handle_task(unsigned short taskid, unsigned short groupid, int file, long f
 {
  int size_per_client =0;
  off_t offset = 0;
+ server_error_codes_e status;
 
  printf("Handling task\n");
 
@@ -543,8 +557,19 @@ void handle_task(unsigned short taskid, unsigned short groupid, int file, long f
 
  size_per_client = (file_size/group_info[groupid-1].clnt_count);
 
- depth_first_traversal_and_send_data(group_info[groupid-1].root, size_per_client, file, &offset, taskid, groupid);
+ status = depth_first_traversal_and_send_data(group_info[groupid-1].root, size_per_client, file, &offset, taskid, groupid);
  
+ if(STATUS_SUCCESS == status) {
+
+   /* Copying the taskid and groupid into the global variables for the signal handler */
+   sig_taskid = taskid;
+
+   sig_groupid = groupid;
+
+   /* Wait for 1 second to get response from all the clients
+    * and the result would be displayed in handler function */
+   alarm(1);
+ }
 }
 
 server_error_codes_e depth_first_traversal_and_send_data(Node * t, int size_per_client, int filefd, off_t *offset, u_short taskid, u_short groupid)
@@ -784,3 +809,48 @@ server_error_codes_e read_and_send_data (int sock_fd, int size_per_client, int f
 
   return STATUS_SUCCESS;
 }
+
+void handler_display_result(int signal)
+{
+  char resultfile[256], output[sizeof(long)];
+  size_t nread = 0;
+  long result = 0;
+  FILE *file;
+
+  if (signal == SIGALRM) {
+    //printf("Got SIGALRM\n");
+
+    snprintf(resultfile, sizeof(resultfile), "group%d_task%d.txt", sig_groupid, sig_taskid);
+
+    file = fopen(resultfile, "r");
+
+    if(!file)
+    {
+      printf("Error in opening resultfile\n");
+      exit(1);
+    }
+    printf("Opening resultfile successful\n");
+
+    nread = fread(output, sizeof(output), 1, file);
+
+    if(nread) {
+      result = atol(output);
+    }
+
+    printf("**** CONSOLIDATED RESULT FOR TASK %d ****\n", sig_taskid);
+
+    if(sig_taskid == MAX_NUM) {
+      printf("The Maximum number in the Given file is %lu\n", result);
+    }
+    else
+    {
+      printf("The Number of words in the Given file is %lu\n", result);
+    }
+
+    fclose(file);
+  }
+
+  printf("Caught wrong signal: %d\n", signal);
+}
+
+
