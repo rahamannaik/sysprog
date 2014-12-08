@@ -108,6 +108,19 @@ void *join_group(void *arg)
 
 }
 
+u_int calculate_digits(u_int num)
+{
+  u_int count = 0;
+
+  while(num)
+  {
+
+    num=num/10;
+    count++;
+  }
+  return count;
+}
+
 u_int find_max_number(int sockfd)
 {
   u_short data_len;
@@ -125,6 +138,8 @@ u_int find_max_number(int sockfd)
   u_int data;
   u_int max = 0;
 
+  data_len = data_len - sizeof(message);
+
   char *data_ptr = malloc(data_len);
 
 
@@ -134,17 +149,26 @@ u_int find_max_number(int sockfd)
     exit(1);
   }
 
-  printf("%s\n", data_ptr); 
+  //printf("%s\n", data_ptr); 
 
-  /*
-  while(sscanf(data_ptr, %u, &data))
+  u_int digits;
+  u_int total_digit = 0;
+
+  while(sscanf(data_ptr, "%d", &data))
   {
-    data = ntohl(data);
+    digits = calculate_digits(data);
+    digits++;
+    total_digit += digits;
+    if(total_digit >= data_len)
+    {
+      break;
+    }
+    data_ptr = data_ptr + digits;
 
     max = (max < data) ? data : max;
 
   }
-  */
+  
 
   return max;
 }
