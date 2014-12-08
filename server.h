@@ -22,6 +22,14 @@ int logopt = LOG_PID | LOG_INFO | LOG_CONS;
 int facility = LOG_USER;
 int priority = LOG_ERR | LOG_USER;
 
+#define MAX_NUM 1
+#define WORD_COUNT 2
+
+unsigned short sig_taskid;
+unsigned short sig_groupid;
+
+void handler_display_result(int signal);
+
 typedef struct group_member
 {
   struct sockaddr_in client_addr;
