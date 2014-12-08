@@ -2,9 +2,9 @@
 
 void *join_group(void *arg)
 {
-  int sockfd = ((int)arg);
+  int *sockfd = (int *) (arg);
 
-  //printf("sock fd in thead is = %d\n", sockfd);
+  printf("sock fd in thead is = %d\n", *sockfd);
 
   int n;
   char buffer[256];
@@ -23,7 +23,7 @@ void *join_group(void *arg)
     {
       if(sscanf(buffer,"%d", &option) != 1)
       {
-        printf("Please enter valid option\n");
+        printf("Please enter valid option : ");
         continue;
       }
     }
@@ -36,7 +36,7 @@ void *join_group(void *arg)
     {
       case 1:
       enter_groupid:
-        printf("Please enter the groupid \n");
+        printf("Please enter the groupid : ");
         if(fgets(buffer,255,stdin))
         {
           if(sscanf(buffer,"%d", &option) == 1)
@@ -87,7 +87,7 @@ void *join_group(void *arg)
         continue;
     }
 
-    if(sendall(sockfd, (char *)ptr, msg_len) == -1)
+    if(sendall(*sockfd, (char *)ptr, msg_len) == -1)
     {
       perror("ERROR writing to socket");
       exit(1);
@@ -104,38 +104,40 @@ u_int find_max_number(int sockfd)
   if(recvall(sockfd, (char *)&data_len, sizeof(data_len)) < 0)
   {
     perror("ERROR reading from socket");
+    printf("%s:%d, Can't read from Socket : %d\n", __func__, __LINE__, sockfd);
     exit(1);
   }
   data_len = ntohs(data_len);
 
+  printf("%s:%d, Data Len : %d\n", __func__, __LINE__, data_len);
+
   u_int data;
   u_int max = 0;
 
-  u_char *data_ptr = malloc(data_len);
+  char *data_ptr = malloc(data_len);
 
 
-/*    if(recvall(sockfd, data_ptr, sizeof(data_len)) < 0)
-    {
-      perror("ERROR reading from socket");
-      exit(1);
-    } */
-
- //   printf("%s\n", data_ptr);
-
-  
-  for(int i = 0; i < data_len / sizeof(u_int); i++)
-  {
-
-    if(recvall(sockfd, (char *)&data, sizeof(data)) < 0)
+    /*if(recv(sockfd, data_ptr, data_len, 0) < 0)
     {
       perror("ERROR reading from socket");
       exit(1);
     }
-    data = ntohl(data);
+
+    printf("%s\n", data_ptr); */
+
+  
+  for(int i = 0; i < data_len / sizeof(u_int); i++) {
+    if(recvall(sockfd, (char *) &data_ptr, data_len) < 0)
+    {
+      perror("ERROR reading from socket");
+      printf("%s:%d, Can't read from Socket : %d\n", __func__, __LINE__, sockfd);
+      exit(1);
+    }
+
+    printf("%s", data_ptr);
 
     max = (max < data) ? data : max;
   }
-  
   return max;
 }
 
@@ -185,24 +187,29 @@ void task_from_server(int sockfd)
   u_int msg_len;
   message *ptr;
 
-  u_char task_id;
+  char task_id;
   u_short group_id;
 
 
   if(recvall(sockfd, &task_id, sizeof(task_id)) < 0)
   {
     perror("ERROR reading from socket");
+    printf("%s:%d, Can't read from Socket : %d\n", __func__, __LINE__, sockfd);
     exit(1);
   }
+
+  printf("%s:%d, Task Id : %d\n", __func__, __LINE__, task_id);
 
   if(recvall(sockfd, (char *)&group_id, sizeof(group_id)) < 0)
   {
     perror("ERROR reading from socket");
+    printf("%s:%d, Can't read from Socket : %d\n", __func__, __LINE__, sockfd);
     exit(1);
   }
 
   group_id = ntohs(group_id);
 
+  printf("%s:%d, Group Id : %d\n", __func__, __LINE__, group_id);
 
   if(ptr == NULL)
   {
@@ -295,22 +302,24 @@ int main(int argc, char *argv[])
   pthread_attr_init(&attr);
   pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
-  pthread_create(&thread_id1, &attr, join_group, (void *)sockfd); 
+  pthread_create(&thread_id1, &attr, join_group, (void *)&sockfd); 
 
   while(1)
   {
-  //  printf("message received form server\n");
+    //printf("message received form server\n");
 
-    u_char msg_type;
+    char msg_type;
     n = recvall(sockfd, &msg_type, sizeof(msg_type));
     if (n < 0) 
     {
       printf("ERROR reading from socket.....................");
+      printf("%s:%d, Can't read from Socket : %d\n", __func__, __LINE__, sockfd);
       exit(1);
     }
 
     if(START_OF_TASK == msg_type)
     {
+      printf("%s:%d, Task From Server Received : Sock Fd : %d\n", __func__, __LINE__, sockfd);
       task_from_server(sockfd); 
     }
 

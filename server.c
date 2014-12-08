@@ -551,7 +551,6 @@ server_error_codes_e depth_first_traversal_and_send_data(Node * t, int size_per_
   printf("Depth traversal\n");
 
   Node * current, *next;
-  server_error_codes_e status;
   //filefd = open ("./Random_Numbers.txt", O_RDONLY);
   current = t;
   next = t-> leftchild;
@@ -565,14 +564,12 @@ server_error_codes_e depth_first_traversal_and_send_data(Node * t, int size_per_
     printf("0)Left:Data %#x %d\n",
         (next->key),
         next->node_count);
-
     
-    
-//    status = read_and_send_data(next->key, size_per_client, filefd, offset, /* , pointer to mesg_struct pre-filled with task id, group id */taskid, groupid);
-    status = basic_read_and_send_data(next->key, size_per_client, filefd, offset /* , pointer to mesg_struct pre-filled with task id, group id */, taskid, groupid);
+    /*status = read_and_send_data(next->key, size_per_client, filefd, offset, taskid, groupid);
+    //status = basic_read_and_send_data(next->key, size_per_client, filefd, offset, taskid, groupid);
     if (status != STATUS_SUCCESS) {
       return status;
-    }
+    } */
   }
   printf("\n");
   //depth_first_traversal_core_and_send_data(next, 1, size_per_client, filefd, &offset /* , pointer to mesg_struct pre-filled with task id, group id */, taskid, groupid);
@@ -602,8 +599,8 @@ server_error_codes_e depth_first_traversal_core_and_send_data( Node * t, int lev
       printf("%d)Left:Data %#x %d\n", level,
           (left->key),
           left->node_count);
-     // status = read_and_send_data(left->key, size_per_client, filefd, offset, /* , pointer to mesg_struct pre-filled with task id, group id */taskid, groupid);
-      status = basic_read_and_send_data(left->key, size_per_client, filefd, offset /* , pointer to mesg_struct pre-filled with task id, group id */, taskid, groupid);
+      status = read_and_send_data(left->key, size_per_client, filefd, offset, /* , pointer to mesg_struct pre-filled with task id, group id */taskid, groupid);
+      //status = basic_read_and_send_data(left->key, size_per_client, filefd, offset /* , pointer to mesg_struct pre-filled with task id, group id */, taskid, groupid);
       if (status != STATUS_SUCCESS) {
         return status;
       }
@@ -626,8 +623,8 @@ server_error_codes_e depth_first_traversal_core_and_send_data( Node * t, int lev
       printf("%d)Right:Data %#x %d\n",level,
           (right->key),
           right->node_count);
-     // status = read_and_send_data(right->key, size_per_client, filefd, offset,  /* , pointer to mesg_struct pre-filled with task id, group id */ taskid, groupid);
-      status = basic_read_and_send_data(right->key, size_per_client, filefd, offset /* , pointer to mesg_struct pre-filled with task id, group id */, taskid, groupid);
+      status = read_and_send_data(right->key, size_per_client, filefd, offset,  /* , pointer to mesg_struct pre-filled with task id, group id */ taskid, groupid);
+      //status = basic_read_and_send_data(right->key, size_per_client, filefd, offset /* , pointer to mesg_struct pre-filled with task id, group id */, taskid, groupid);
       if (status != STATUS_SUCCESS) {
         return status;
       }
@@ -675,8 +672,8 @@ server_error_codes_e read_and_send_data (int sock_fd, int size_per_client, int f
   char c = '\0';
   int still_to_read = 0;
   int max_size = size_per_client;
-  long msg_len  = sizeof(message);
-  message *ptr = malloc(msg_len) + size_per_client;
+  long msg_len  = sizeof(message) + size_per_client;
+  message *ptr = malloc(msg_len); 
   static unsigned char is_start_task = TRUE;
 
   if (is_start_task) {
@@ -693,20 +690,31 @@ server_error_codes_e read_and_send_data (int sock_fd, int size_per_client, int f
   printf("%s:%d, htons'd Group Id :%d, Actual Group Id :%d\n", __func__, __LINE__, ptr->group_id, group_id);
   printf("%s:%d, Message Type :%d\n", __func__, __LINE__, ptr->msg_type);
 
-  while (max_size >= 0) {
+  while (max_size > 0) {
     n = pread (filefd, ptr->data, size_per_client, *offset);
     if (n == -1) {
       return STATUS_FILE_READ_ERR;
     } else if (n == 0) {
       ptr->msg_type = END_OF_TASK;
       /* Update the Message type here. */
+      ptr->data[n + still_to_read] = '\0';
+      ptr->data_len = htons(msg_len + still_to_read);
+      printf("%s:%d, htons'd Data Len :%d, Actual Data Len :%ld\n", __func__, __LINE__, ptr->data_len, (msg_len + still_to_read));
+      printf("%s:%d, Number of bytes read : %d\n", __func__, __LINE__, n);
+      /* send (sock_fd, msg_struct, sizeof(msg_struct), 0); */
+      if(sendall(sock_fd, (char *)ptr, (msg_len + still_to_read)) == -1)
+      {
+        perror("ERROR writing to socket");
+        exit(1);
+      }
+
       break; /* This break has to be at different place after updating the message type */
     }
 
     /* TODO :: Move this if block, after this while loop if you are NOT reading 
      * the entire size in one go. 
      */
-    if (task_id == 1) {
+    /*if (task_id == 1) {
       message *temp_var = NULL;
       if(ptr->data[n] != ' ') {
         FILE* fp = fdopen(filefd, "r");
@@ -725,9 +733,6 @@ server_error_codes_e read_and_send_data (int sock_fd, int size_per_client, int f
             break;
           }
         }
-        /* TODO :: Kiran : Before reading... increase the size of the buffer, I would suggest
-         * Have a temp buff and copy the exising thing in the temp buff and free the allocated
-         * memory and then freshly allocate a memory n + still_to_read. */
 
         temp_var = (message*) malloc (sizeof(message) + n + still_to_read + 1);
         assert(temp_var);
@@ -740,8 +745,8 @@ server_error_codes_e read_and_send_data (int sock_fd, int size_per_client, int f
           return STATUS_FILE_READ_ERR;
         }
       }
-    }
-    ptr->data[n+ still_to_read] = '\0';
+    } */
+    ptr->data[n + still_to_read] = '\0';
 
     /* Have to handle the space case */
 
@@ -751,16 +756,28 @@ server_error_codes_e read_and_send_data (int sock_fd, int size_per_client, int f
 
     ptr->data_len = htons(msg_len + still_to_read);
     printf("%s:%d, htons'd Data Len :%d, Actual Data Len :%ld\n", __func__, __LINE__, ptr->data_len, (msg_len + still_to_read));
-    /* send (sock_fd, msg_struct, sizeof(msg_struct), 0); */
-    if(sendall(sock_fd, (char *)ptr, (msg_len + still_to_read)) == -1)
+    printf("%s:%d, Number of bytes read : %d\n", __func__, __LINE__, n);
+    if(send (sock_fd, ptr, (msg_len + still_to_read), 0) == -1) 
+//    if(sendall(sock_fd, ptr, (msg_len + still_to_read)) == -1)
     {
       perror("ERROR writing to socket");
       exit(1);
     }
     max_size -= n;
+    printf("%s:%d, max_size: %d\n", __func__, __LINE__, max_size);
   }
 
   /* Close the file if end of file is reached. */
+  //ptr->data[0] = '\0';
+  memset(ptr->data, 0, (size_per_client));
+  ptr->msg_type = END_OF_TASK;
+  ptr->data_len = sizeof(message);
+  if(send (sock_fd, ptr, sizeof(message), 0) == -1) 
+  //if(sendall(sock_fd, ptr, sizeof(message)) == -1)
+  {
+    perror("ERROR writing to socket");
+    exit(1);
+  }
 
   return STATUS_SUCCESS;
 }
