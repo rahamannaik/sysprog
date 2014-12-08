@@ -15,7 +15,7 @@ void *join_group(void *arg)
   while(1)
   {
     unsigned int option;
-    unsigned int g_id;
+    unsigned int grp_id;
     printf("select 1 to join a group\n");
     printf("select 2 to send message to a group(Max 255 character long)\n");
     printf("select 3 to leave a group\n");
@@ -42,7 +42,7 @@ void *join_group(void *arg)
         printf("Please enter the groupid : ");
         if(fgets(buffer,255,stdin))
         {
-          if(sscanf(buffer,"%d", &g_id) == 1)
+          if(sscanf(buffer,"%d", &grp_id) == 1)
           {
             ptr = malloc(sizeof(message)); 
 
@@ -62,7 +62,7 @@ void *join_group(void *arg)
             }
 
             msg_len = sizeof(message);
-            u_short g_id = (u_short)g_id;
+            u_short g_id = (u_short)grp_id;
             ptr->group_id = htons(g_id);
           }
           else
@@ -128,29 +128,24 @@ u_int find_max_number(int sockfd)
   char *data_ptr = malloc(data_len);
 
 
-    /*if(recv(sockfd, data_ptr, data_len, 0) < 0)
-    {
-      perror("ERROR reading from socket");
-      exit(1);
-    }
-
-    printf("%s\n", data_ptr); */
-
-  
-  for(int i = 0; i < data_len / sizeof(u_int); i++)
+  if(recvall(sockfd, data_ptr, data_len) < 0)
   {
+    perror("ERROR reading from socket");
+    exit(1);
+  }
 
-    if(recvall(sockfd, (char *)&data, sizeof(data)) < 0)
-    {
-      perror("ERROR reading from socket");
-      printf("%s:%d, Can't read from Socket : %d\n", __func__, __LINE__, sockfd);
-      exit(1);
-    }
+  printf("%s\n", data_ptr); 
 
-    printf("%s", data_ptr);
+  /*
+  while(sscanf(data_ptr, %u, &data))
+  {
+    data = ntohl(data);
 
     max = (max < data) ? data : max;
+
   }
+  */
+
   return max;
 }
 
