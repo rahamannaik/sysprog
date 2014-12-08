@@ -62,6 +62,7 @@ void *join_group(void *arg)
             }
 
             msg_len = sizeof(message);
+            u_short g_id = (u_short)grp_id;
             ptr->group_id = htons(g_id);
           }
           else
