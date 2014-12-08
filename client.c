@@ -186,6 +186,7 @@ u_int word_count(int sockfd)
 
   data_len = ntohs(data_len);
 
+  data_len = data_len - sizeof(message);
 
   u_char *data_ptr = malloc(data_len);
 
