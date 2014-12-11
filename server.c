@@ -253,7 +253,6 @@ int main(int argc, char *argv[])
               printf("Server-select() is OK...\n");*/
 
           }
-
         }
 
         else
@@ -304,14 +303,15 @@ int main(int argc, char *argv[])
             u_char task_id;
             u_short group_id;
             u_short cnt = 0;
+            u_short data_len;
 
-            if(recv(i, &task_id, sizeof(task_id),0) < 0)
+            if(recvall(i, &task_id, sizeof(task_id)) < 0)
             {
               perror("ERROR reading from socket");
               exit(1);
             }
 
-            if(recv(i, (char *)&group_id, sizeof(group_id),0) < 0)
+            if(recvall(i, (char *)&group_id, sizeof(group_id)) < 0)
             {
               perror("ERROR reading from socket");
               exit(1);
@@ -319,6 +319,12 @@ int main(int argc, char *argv[])
             group_id = ntohs(group_id);
             printf("%s:%d, groud id : %d\n", __func__, __LINE__, group_id);
             printf("%s:%d, Message Type : %d\n", __func__, __LINE__, msg_type);
+
+            if(recvall(i, (char *)&data_len, sizeof(data_len)) < 0)
+            {
+              perror("ERROR reading from socket");
+              exit(1);
+            }
 
             if(JOIN_GROUP == msg_type)
             {
@@ -340,6 +346,7 @@ int main(int argc, char *argv[])
                   pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
                   pthread_create(&thread_id1, &attr, handle_user_input, NULL);
+                
                 }
               }
               else
@@ -357,18 +364,18 @@ int main(int argc, char *argv[])
             else if(REPLY_FROM_CLIENT == msg_type)
             {
               printf("%s:%d, Received Reply from Client : %d\n", __func__, __LINE__, i);
-              u_short data_len;
+   /*           u_short data_len;
               if(recvall(i, (char *)&data_len, sizeof(data_len)) < 0)
               {
                 perror("ERROR reading from socket");
                 exit(1);
-              }
+              } */
               data_len = ntohs(data_len);
               printf("\n Data len = %d", data_len);
 
               u_int data;
 
-              if(recvall(i, (char *)&data, sizeof(data)) < 0)
+              if(recvall(i, (char *)&data, data_len) < 0)
               {
                 perror("ERROR reading from socket");
                 exit(1);
@@ -435,7 +442,6 @@ int main(int argc, char *argv[])
             }
 
           }
-
         }
 
       }
